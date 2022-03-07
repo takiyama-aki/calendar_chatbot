@@ -14,20 +14,23 @@ SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
 
 def main():
-    """Shows basic usage of the Google Calendar API.
+    """
+    Shows basic usage of the Google Calendar API.
     Prints the start and name of the next 10 events on the user's calendar.
     """
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    """↑token.jsonというファイルには、ユーザーのアクセストークンやリフレッシュトークンが保存され、
-    認可フローが初めて完了したときに自動的に作成されます。
-    """
+    
+    #↑token.jsonというファイルには、ユーザーのアクセストークンやリフレッシュトークンが保存され、
+    #認可フローが初めて完了したときに自動的に作成されます。
+    
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
     # If there are no (valid) credentials available, let the user log in.
-    """↑利用可能な（有効な）認証情報がない場合、ユーザーにログインを許可します。"""
+    
+    #利用可能な（有効な）認証情報がない場合、ユーザーにログインを許可します。
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
@@ -36,7 +39,7 @@ def main():
                 'credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
-        """↑次の実行のために認証情報を保存する"""
+        #↑次の実行のために認証情報を保存する
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
 

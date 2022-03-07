@@ -39,19 +39,52 @@ def callback():
 
     return 'OK'
 
+import os.path
+import datetime
+
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from googleapiclient.errors import HttpError
+from googleapiclient.discovery import build
+
+
+SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    receive_txt = event.message.text #"○月○日 △時△分 予定"
-    a = receive_txt.split(" ")
-    print(a)
+
+    creds = None
+    
+    if os.path.exists('token.json'):
+        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+        print("token.json exists")
+    
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+            print("creds refreshed")
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                'credentials.json', SCOPES)
+            creds = flow.run_local_server(port=0)
+            print("beroberobar")
+        # Save the credentials for the next run
+        
+        with open('token.json', 'w') as token:
+            token.write(creds.to_json())
+            print("Saved the credentials for the next run")
+
+    service = build('calendar', 'v3', credentials=creds)
+    now = datetime.datetime.utcnow().isoformat() + 'Z'
+
+    receive_txt = event.message.text 
     reply_txt = "あなたは" + receive_txt + "と言った。"
 
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=reply_txt)) #event.message.text がユーザーが送ってきたテキスト
+
     
-
-
 if __name__ == "__main__":
     app.run()
