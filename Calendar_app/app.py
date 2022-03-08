@@ -58,7 +58,7 @@ def handle_message(event):
     
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-        print("token.json exists")
+        #print("token.json exists")
     
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
@@ -80,6 +80,30 @@ def handle_message(event):
 
     receive_txt = event.message.text 
     reply_txt = "あなたは" + receive_txt + "と言った。"
+
+    if receive_txt == "予定":
+        timefrom = '2022/03/08'
+        timeto = '2022/03/15'
+        timefrom = datetime.datetime.strptime(timefrom, '%Y/%m/%d').isoformat()+'Z'
+        timeto = datetime.datetime.strptime(timeto, '%Y/%m/%d').isoformat()+'Z'
+        events_result = service.events().list(calendarId='csak19061@g.nihon-u.ac.jp',
+                                            timeMin=timefrom,
+                                            timeMax=timeto,
+                                            singleEvents=True,
+                                            orderBy='startTime').execute()
+        events = events_result.get('items', [])
+
+        if not events:
+            print('No upcoming events found.')
+            reply_txt = '予定がないです'
+        else:
+            reply_txt = '予定があります'
+
+        for g_event in events:
+            start = g_event['start'].get('dateTime', g_event['start'].get('date'))
+            start = datetime.datetime.strptime(start[:-6], '%Y-%m-%dT%H:%M:%S')
+            print(start, g_event['summary'])
+            #print(g_event['start'], g_event['end'], g_event['summary'], g_event['description'])
 
     line_bot_api.reply_message(
         event.reply_token,

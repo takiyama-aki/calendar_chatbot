@@ -43,30 +43,27 @@ def main():
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
 
-    try:
-        service = build('calendar', 'v3', credentials=creds)
+    
+    service = build('calendar', 'v3', credentials=creds)
+    # Call the Calendar API
 
-        # Call the Calendar API
-        now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
-        #print(now)
-        print('Getting the upcoming 10 events')
-        events_result = service.events().list(calendarId='primary', timeMin=now,
-                                              maxResults=10, singleEvents=True,
-                                              orderBy='startTime').execute()
-        events = events_result.get('items', [])
+    timefrom = '2022/03/08'
+    timeto = '2022/03/15'
+    timefrom = datetime.datetime.strptime(timefrom, '%Y/%m/%d').isoformat()+'Z'
+    timeto = datetime.datetime.strptime(timeto, '%Y/%m/%d').isoformat()+'Z'
+    events_result = service.events().list(calendarId='csak19061@g.nihon-u.ac.jp',
+                                        timeMin=timefrom,
+                                        timeMax=timeto,
+                                        singleEvents=True,
+                                        orderBy='startTime').execute()
+    events = events_result.get('items', [])
 
-        if not events:
-            print('No upcoming events found.')
-            return
-
-        # Prints the start and name of the next 10 events
-        for event in events:
-            start = event['start'].get('dateTime', event['start'].get('date'))
-            print(start, event['summary'])
-
-    except HttpError as error:
-        print('An error occurred: %s' % error)
-
+    if not events:
+        print('No upcoming events found.')
+    for event in events:
+        start = event['start'].get('dateTime', event['start'].get('date'))
+        start = datetime.datetime.strptime(start[:-6], '%Y-%m-%dT%H:%M:%S')
+        print(start, event['summary'])
 
 if __name__ == '__main__':
     main()
