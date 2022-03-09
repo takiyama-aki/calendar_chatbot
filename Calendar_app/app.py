@@ -99,11 +99,21 @@ def handle_message(event):
         else:
             reply_txt = '予定があります'
 
+        alist = []
         for g_event in events:
             start = g_event['start'].get('dateTime', g_event['start'].get('date'))
             start = datetime.datetime.strptime(start[:-6], '%Y-%m-%dT%H:%M:%S')
-            print(start, g_event['summary'])
+
+            #print(start, g_event['summary'])
             #print(g_event['start'], g_event['end'], g_event['summary'], g_event['description'])
+            tmp = str(start) +" "+ g_event['summary']
+            print(tmp)
+            alist.append(tmp)
+
+        #print("\n".join(alist))
+        tmp = "\n".join(alist)
+        print(tmp)
+        reply_txt = tmp
 
     line_bot_api.reply_message(
         event.reply_token,
