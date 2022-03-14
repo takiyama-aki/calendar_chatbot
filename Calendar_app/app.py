@@ -80,14 +80,13 @@ def handle_message(event):
 
     receive_txt = event.message.text 
     reply_txt = "あなたは" + receive_txt + "と言った。"
+
     # 予定と言ったら１週間の予定を返信する。
     if receive_txt == "予定":
-        today = datetime.datetime.now(
-            datetime.timezone(datetime.timedelta(hours=9))
-        )
+        today = datetime.datetime.now()
 
-        timefrom = today.strftime('%Y/%m/%d')
-        timeto = (today + datetime.timedelta(days= 7)).strftime('%Y/%m/%d')
+        timefrom = today .strftime('%Y/%m/%d')
+        timeto = (today + datetime.timedelta(weeks= 1)).strftime('%Y/%m/%d')
         timefrom = datetime.datetime.strptime(timefrom, '%Y/%m/%d').isoformat()+'Z'
         timeto = datetime.datetime.strptime(timeto, '%Y/%m/%d').isoformat()+'Z'
         events_result = service.events().list(calendarId='csak19061@g.nihon-u.ac.jp',
@@ -96,6 +95,8 @@ def handle_message(event):
                                             singleEvents=True,
                                             orderBy='startTime').execute()
         events = events_result.get('items', [])
+
+        print(timefrom, timeto)
 
         if not events:
             print('No upcoming events found.')
@@ -122,9 +123,7 @@ def handle_message(event):
 
     # 明日と言ったら明日の予定を返信する
     if receive_txt == "明日":
-        tomorrow = datetime.datetime.now(
-            datetime.timezone(datetime.timedelta(hours=9))
-        ) + datetime.timedelta(days = 1)
+        tomorrow = datetime.datetime.now() 
 
         timefrom = tomorrow.strftime('%Y/%m/%d')
         timeto = (tomorrow + datetime.timedelta(days= 1)).strftime('%Y/%m/%d')
@@ -165,10 +164,12 @@ def handle_message(event):
     import re
     if re.fullmatch( r'\d{4}/\d{2}/\d{2}',receive_txt):
         tmp = receive_txt.split("/")
-        day = datetime.datetime(int(tmp[0]), int(tmp[1]), int(tmp[2]), 0, 0, 0, 0)
+        print(tmp)
+        day = datetime.date(int(tmp[0]), int(tmp[1]), int(tmp[2]))
+        print(day)
         
         timefrom = day.strftime('%Y/%m/%d')
-        timeto = (day + datetime.timedelta(days= 1)).strftime('%Y/%m/%d')
+        timeto = (day + datetime.timedelta(days= 1)) .strftime('%Y/%m/%d')
         timefrom = datetime.datetime.strptime(timefrom, '%Y/%m/%d').isoformat()+'Z'
         timeto = datetime.datetime.strptime(timeto, '%Y/%m/%d').isoformat()+'Z'
         events_result = service.events().list(calendarId='csak19061@g.nihon-u.ac.jp',
@@ -198,7 +199,7 @@ def handle_message(event):
                 tmp = "*"+ str(start) + "~" + str(end) +" ["+ g_event['summary']+"]"
                 alist.append(tmp)
 
-            #print("\n".join(alist))
+            print("\n".join(alist))
             tmp = "\n".join(alist)
             reply_txt = tmp
 
