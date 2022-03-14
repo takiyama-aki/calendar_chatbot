@@ -69,7 +69,6 @@ def handle_message(event):
             flow = InstalledAppFlow.from_client_secrets_file(
                 'credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
-            print("beroberobar")
         # Save the credentials for the next run
         
         with open('token.json', 'w') as token:
@@ -98,7 +97,6 @@ def handle_message(event):
                                             orderBy='startTime').execute()
         events = events_result.get('items', [])
 
-        print(timefrom)
         if not events:
             print('No upcoming events found.')
             reply_txt = '予定がないです'
@@ -116,12 +114,10 @@ def handle_message(event):
             #print(start, g_event['summary'])
             #print(g_event['start'], g_event['end'], g_event['summary'], g_event['description'])
             tmp = "*"+ str(start) + "~" + str(end) +" ["+ g_event['summary']+"]"
-            print(tmp)
             alist.append(tmp)
 
         #print("\n".join(alist))
         tmp = "\n".join(alist)
-        print(tmp)
         reply_txt = tmp
 
     # 明日と言ったら明日の予定を返信する
@@ -159,12 +155,10 @@ def handle_message(event):
                 #print(start, g_event['summary'])
                 #print(g_event['start'], g_event['end'], g_event['summary'], g_event['description'])
                 tmp = "*"+ str(start) + "~" + str(end) +" ["+ g_event['summary']+"]"
-                print(tmp)
                 alist.append(tmp)
 
             #print("\n".join(alist))
             tmp = "\n".join(alist)
-            print(tmp)
             reply_txt = tmp
     
     # 指定の日付の予定を取得する
@@ -202,12 +196,10 @@ def handle_message(event):
                 #print(start, g_event['summary'])
                 #print(g_event['start'], g_event['end'], g_event['summary'], g_event['description'])
                 tmp = "*"+ str(start) + "~" + str(end) +" ["+ g_event['summary']+"]"
-                print(tmp)
                 alist.append(tmp)
 
             #print("\n".join(alist))
             tmp = "\n".join(alist)
-            print(tmp)
             reply_txt = tmp
 
 
