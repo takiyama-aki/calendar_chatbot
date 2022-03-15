@@ -83,12 +83,20 @@ def handle_message(event):
 
     # 予定と言ったら１週間の予定を返信する。
     if receive_txt == "予定":
-        today = datetime.datetime.now()
+        tmp = datetime.datetime.now().strftime('%Y/%m/%d')
+        ymd = tmp.split("/")
 
-        timefrom = today .strftime('%Y/%m/%d')
-        timeto = (today + datetime.timedelta(weeks= 1)).strftime('%Y/%m/%d')
-        timefrom = datetime.datetime.strptime(timefrom, '%Y/%m/%d').isoformat()+'Z'
-        timeto = datetime.datetime.strptime(timeto, '%Y/%m/%d').isoformat()+'Z'
+        today = datetime.datetime(int(ymd[0]), int(ymd[1]), int(ymd[2])-1, 15)
+        timefrom = today.isoformat()+'Z'
+        timeto = (today + datetime.timedelta(days= 8)).isoformat()+'Z'
+
+        # timefrom = today .strftime('%Y/%m/%d')
+        # timeto = (today + datetime.timedelta(weeks= 1)).strftime('%Y/%m/%d')
+        # timefrom = datetime.datetime.strptime(timefrom, '%Y/%m/%d').isoformat()+'Z'
+        # timeto = datetime.datetime.strptime(timeto, '%Y/%m/%d').isoformat()+'Z'
+
+
+
         events_result = service.events().list(calendarId='csak19061@g.nihon-u.ac.jp',
                                             timeMin=timefrom,
                                             timeMax=timeto,
@@ -118,17 +126,24 @@ def handle_message(event):
             alist.append(tmp)
 
         #print("\n".join(alist))
-        tmp = "\n".join(alist)
+        tmp = "\n\n".join(alist)
         reply_txt = tmp
 
     # 明日と言ったら明日の予定を返信する
     if receive_txt == "明日":
-        tomorrow = datetime.datetime.now() 
+        tmp = datetime.datetime.now().strftime('%Y/%m/%d')  #欲しい日付の１日前の15:00~
+        ymd = tmp.split("/")
 
-        timefrom = tomorrow.strftime('%Y/%m/%d')
-        timeto = (tomorrow + datetime.timedelta(days= 1)).strftime('%Y/%m/%d')
-        timefrom = datetime.datetime.strptime(timefrom, '%Y/%m/%d').isoformat()+'Z'
-        timeto = datetime.datetime.strptime(timeto, '%Y/%m/%d').isoformat()+'Z'
+        tomorrow = datetime.datetime(int(ymd[0]), int(ymd[1]), int(ymd[2]), 15)
+        timefrom = tomorrow.isoformat()+'Z'
+        timeto = (tomorrow + datetime.timedelta(days= 1)).isoformat()+'Z'
+
+
+        # timefrom = tomorrow.strftime('%Y/%m/%d')
+        # timeto = (tomorrow + datetime.timedelta(days= 1)).strftime('%Y/%m/%d')
+        # timefrom = datetime.datetime.strptime(timefrom, '%Y/%m/%d').isoformat()+'Z'
+        # timeto = datetime.datetime.strptime(timeto, '%Y/%m/%d').isoformat()+'Z'
+
         events_result = service.events().list(calendarId='csak19061@g.nihon-u.ac.jp',
                                             timeMin=timefrom,
                                             timeMax=timeto,
@@ -157,7 +172,7 @@ def handle_message(event):
                 alist.append(tmp)
 
             #print("\n".join(alist))
-            tmp = "\n".join(alist)
+            tmp = "\n\n".join(alist)
             reply_txt = tmp
     
     # 指定の日付の予定を取得する
@@ -165,13 +180,19 @@ def handle_message(event):
     if re.fullmatch( r'\d{4}/\d{2}/\d{2}',receive_txt):
         tmp = receive_txt.split("/")
         print(tmp)
-        day = datetime.date(int(tmp[0]), int(tmp[1]), int(tmp[2]))
+        day = datetime.datetime(int(tmp[0]), int(tmp[1]), int(tmp[2])-1, 15)
         print(day)
         
-        timefrom = day.strftime('%Y/%m/%d')
-        timeto = (day + datetime.timedelta(days= 1)) .strftime('%Y/%m/%d')
-        timefrom = datetime.datetime.strptime(timefrom, '%Y/%m/%d').isoformat()+'Z'
-        timeto = datetime.datetime.strptime(timeto, '%Y/%m/%d').isoformat()+'Z'
+        # timefrom = day.strftime('%Y/%m/%d')
+        # timeto = (day + datetime.timedelta(days= 1)) .strftime('%Y/%m/%d')
+        # timefrom = datetime.datetime.strptime(timefrom, '%Y/%m/%d').isoformat()+'Z'
+        # timeto = datetime.datetime.strptime(timeto, '%Y/%m/%d').isoformat()+'Z'
+
+        timefrom = day.isoformat()+'Z'
+        timeto = (day + datetime.timedelta(days= 1)).isoformat()+'Z'
+
+        print("timefrom: ",timefrom," timeto: ", timeto)
+
         events_result = service.events().list(calendarId='csak19061@g.nihon-u.ac.jp',
                                             timeMin=timefrom,
                                             timeMax=timeto,
@@ -179,7 +200,7 @@ def handle_message(event):
                                             orderBy='startTime').execute()
         events = events_result.get('items', [])
 
-        print(timefrom, timeto)
+        
         if not events:
             print('No upcoming events found.')
             reply_txt = '予定がないです'
@@ -200,9 +221,8 @@ def handle_message(event):
                 alist.append(tmp)
 
             print("\n".join(alist))
-            tmp = "\n".join(alist)
+            tmp = "\n\n".join(alist)
             reply_txt = tmp
-
 
         
     line_bot_api.reply_message(
