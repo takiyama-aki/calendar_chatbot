@@ -175,8 +175,11 @@ def handle_message(event):
     
     # 指定の日付の予定を取得する
     import re
-    if re.fullmatch( r'\d{4}/\d{2}/\d{2}',receive_txt):
-        tmp = receive_txt.split("/")
+    if re.fullmatch( r'\d{8}',receive_txt):
+        tmp = [0, 0, 0]
+        tmp[0] = receive_txt[:4]
+        tmp[1] = receive_txt[4:6]
+        tmp[2] = receive_txt[6:8]
         print(tmp)
         day = datetime.datetime(int(tmp[0]), int(tmp[1]), int(tmp[2])-1, 15)
         print(day)
@@ -222,33 +225,49 @@ def handle_message(event):
             tmp = "\n\n".join(alist)
             reply_txt = tmp
 
-        
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply_txt)) #event.message.text がユーザーが送ってきたテキスト
-
-    import pickle
 
     #予定を挿入する
-    if receive_txt == "挿入":
-        
-        event = {
-            'summary': '予定1',
-            'location': 'Shibuya Office',
-            'description': 'サンプルの予定',
+    # "xxxxyyzz nnnn 予定"
+    if re.fullmatch( r'\d{8} \d{4} [\u0000-\u007F\u3041-\u309F\u30A1-\u30FF\u2E80-\u2FDF\u3005-\u3007\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\U00020000-\U0002EBEF]+', receive_txt):
+        tmp = receive_txt.split( )
+        print(tmp) #tmp[0]: 年 tmp[1]: 時間 tmp[2]: 予定
+        year = tmp[0][:4]
+        month = tmp[0][4:6]
+        day = tmp[0][6:8]
+        hour = tmp[1][:2]
+        minute = tmp[1][2:4]
+        yotei = str(tmp[2])
+
+        time = datetime.datetime(int(year), int(month), int(day), int(hour), int(minute))
+        print(time)
+
+        timefrom = time.isoformat()
+        timeto = (time + datetime.timedelta(seconds = 3600)).isoformat()
+
+        g_event = {
+            'summary': tmp[2],
+            #'location': 'Shibuya Office',
+            #'description': 'サンプルの予定',
             'start': {
-                'dateTime': '2022-03-20T09:00:00',
+                'dateTime': timefrom,
                 'timeZone': 'Japan',
             },
             'end': {
-                'dateTime': '2022-03-20T17:00:00',
+                'dateTime': timeto,
                 'timeZone': 'Japan',
             },
         }
 
-        event = service.events().insert(calendarId='csak19061@g.nihon-u.ac.jp',
-                                        body=event).execute()
-        print (event['id'])
+        g_event = service.events().insert(calendarId='csak19061@g.nihon-u.ac.jp',
+                                        body=g_event).execute()
+        print (g_event['id'])
+
+        
+        reply_txt = year+"/"+month+"/"+day+"の"+hour+":"+minute+"に「"+yotei+"」の予定を追加しました"
+
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=reply_txt)) #event.message.text がユーザーが送ってきたテキスト
     
 if __name__ == "__main__":
     app.run()
