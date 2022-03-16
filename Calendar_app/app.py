@@ -50,7 +50,7 @@ from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
 
 
-SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
@@ -76,8 +76,6 @@ def handle_message(event):
             print("Saved the credentials for the next run")
 
     service = build('calendar', 'v3', credentials=creds)
-    now = datetime.datetime.utcnow().isoformat() + 'Z'
-
     receive_txt = event.message.text 
     reply_txt = "あなたは" + receive_txt + "と言った。"
 
@@ -229,6 +227,28 @@ def handle_message(event):
         event.reply_token,
         TextSendMessage(text=reply_txt)) #event.message.text がユーザーが送ってきたテキスト
 
+    import pickle
+
+    #予定を挿入する
+    if receive_txt == "挿入":
+        
+        event = {
+            'summary': '予定1',
+            'location': 'Shibuya Office',
+            'description': 'サンプルの予定',
+            'start': {
+                'dateTime': '2022-03-20T09:00:00',
+                'timeZone': 'Japan',
+            },
+            'end': {
+                'dateTime': '2022-03-20T17:00:00',
+                'timeZone': 'Japan',
+            },
+        }
+
+        event = service.events().insert(calendarId='csak19061@g.nihon-u.ac.jp',
+                                        body=event).execute()
+        print (event['id'])
     
 if __name__ == "__main__":
     app.run()
