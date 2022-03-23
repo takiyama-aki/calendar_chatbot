@@ -1,4 +1,3 @@
-import imp
 from flask import Flask, request, abort
 
 from linebot import (
