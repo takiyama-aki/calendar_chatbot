@@ -47,7 +47,7 @@ def main():
 
     event = service.events().insert(calendarId='csak19061@g.nihon-u.ac.jp',
                                     body=event).execute()
-    print (event['id'])
+    print (event['id '])
 
 if __name__ == '__main__':
     main()
