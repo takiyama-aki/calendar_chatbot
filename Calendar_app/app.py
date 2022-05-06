@@ -17,9 +17,6 @@ line_bot_api = LineBotApi('lhqD0fJxzv4nMgoIOdqLeMrTdNTFFaEhI8vX/PBYSDMndxQNRhIVJ
 handler = WebhookHandler('03fb497fc092b55b7ce856b2d9b795bd') 
 #YOUR_CHANNEL_SECRET
 
-@app.route("/")
-def test():
-    return "OK"
     
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -51,6 +48,7 @@ from googleapiclient.discovery import build
 
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
+@app.route("/")
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
 
@@ -87,13 +85,6 @@ def handle_message(event):
         timefrom = today.isoformat()+'Z'
         timeto = (today + datetime.timedelta(days= 8)).isoformat()+'Z'
 
-        # timefrom = today .strftime('%Y/%m/%d')
-        # timeto = (today + datetime.timedelta(weeks= 1)).strftime('%Y/%m/%d')
-        # timefrom = datetime.datetime.strptime(timefrom, '%Y/%m/%d').isoformat()+'Z'
-        # timeto = datetime.datetime.strptime(timeto, '%Y/%m/%d').isoformat()+'Z'
-
-
-
         events_result = service.events().list(calendarId='csak19061@g.nihon-u.ac.jp',
                                             timeMin=timefrom,
                                             timeMax=timeto,
@@ -109,7 +100,7 @@ def handle_message(event):
         else:
             reply_txt = '予定があります'
 
-        alist = []
+        schedule = []
         for g_event in events:
             start = g_event['start'].get('dateTime', g_event['start'].get('date'))
             start = datetime.datetime.strptime(start[:-6], '%Y-%m-%dT%H:%M:%S').strftime('%Y/%m/%d %H:%M')
@@ -119,27 +110,21 @@ def handle_message(event):
 
             #print(start, g_event['summary'])
             #print(g_event['start'], g_event['end'], g_event['summary'], g_event['description'])
-            tmp = "*"+ str(start) + "~" + str(end) +" ["+ g_event['summary']+"]"
-            alist.append(tmp)
+            tmp = "・"+ str(start) + "~" + str(end) +" "+ g_event['summary']
+            schedule.append(tmp)
 
         #print("\n".join(alist))
-        tmp = "\n\n".join(alist)
-        reply_txt = tmp
+        reply_txt = "\n\n".join(schedule)
+        
 
     # 明日と言ったら明日の予定を返信する
     if receive_txt == "明日":
-        tmp = datetime.datetime.now().strftime('%Y/%m/%d')  #欲しい日付の１日前の15:00~
-        ymd = tmp.split("/")
+        tmp = datetime.datetime.now().strftime('%Y/%m/%d') # tmp = "年/月/日"
+        ymd = tmp.split("/") # ymd[0]= 年, ymd[1]= 月, ymd[2]= 日 
 
         tomorrow = datetime.datetime(int(ymd[0]), int(ymd[1]), int(ymd[2]), 15)
         timefrom = tomorrow.isoformat()+'Z'
         timeto = (tomorrow + datetime.timedelta(days= 1)).isoformat()+'Z'
-
-
-        # timefrom = tomorrow.strftime('%Y/%m/%d')
-        # timeto = (tomorrow + datetime.timedelta(days= 1)).strftime('%Y/%m/%d')
-        # timefrom = datetime.datetime.strptime(timefrom, '%Y/%m/%d').isoformat()+'Z'
-        # timeto = datetime.datetime.strptime(timeto, '%Y/%m/%d').isoformat()+'Z'
 
         events_result = service.events().list(calendarId='csak19061@g.nihon-u.ac.jp',
                                             timeMin=timefrom,
@@ -153,9 +138,8 @@ def handle_message(event):
             print('No upcoming events found.')
             reply_txt = '予定がないです'
         else:
-            reply_txt = '予定があります'
 
-            alist = []
+            schedule = []
             for g_event in events:
                 start = g_event['start'].get('dateTime', g_event['start'].get('date'))
                 start = datetime.datetime.strptime(start[:-6], '%Y-%m-%dT%H:%M:%S').strftime('%Y/%m/%d %H:%M')
@@ -165,16 +149,15 @@ def handle_message(event):
 
                 #print(start, g_event['summary'])
                 #print(g_event['start'], g_event['end'], g_event['summary'], g_event['description'])
-                tmp = "*"+ str(start) + "~" + str(end) +" ["+ g_event['summary']+"]"
-                alist.append(tmp)
+                tmp = "・"+ str(start) + "~" + str(end) +" "+ g_event['summary']
+                schedule.append(tmp)
 
             #print("\n".join(alist))
-            tmp = "\n\n".join(alist)
-            reply_txt = tmp
+            reply_txt = "\n\n".join(schedule)
     
     # 指定の日付の予定を取得する
     import re
-    if re.fullmatch( r'\d{8}',receive_txt):
+    if re.fullmatch( r'(\d{2}|\d{1})/(\d{2}|\d{1})',receive_txt):
         tmp = [0, 0, 0]
         tmp[0] = receive_txt[:4]
         tmp[1] = receive_txt[4:6]
@@ -183,10 +166,6 @@ def handle_message(event):
         day = datetime.datetime(int(tmp[0]), int(tmp[1]), int(tmp[2])-1, 15)
         print(day)
         
-        # timefrom = day.strftime('%Y/%m/%d')
-        # timeto = (day + datetime.timedelta(days= 1)) .strftime('%Y/%m/%d')
-        # timefrom = datetime.datetime.strptime(timefrom, '%Y/%m/%d').isoformat()+'Z'
-        # timeto = datetime.datetime.strptime(timeto, '%Y/%m/%d').isoformat()+'Z'
 
         timefrom = day.isoformat()+'Z'
         timeto = (day + datetime.timedelta(days= 1)).isoformat()+'Z'
@@ -207,7 +186,7 @@ def handle_message(event):
         else:
             reply_txt = '予定があります'
 
-            alist = []
+            schedule = []
             for g_event in events:
                 start = g_event['start'].get('dateTime', g_event['start'].get('date'))
                 start = datetime.datetime.strptime(start[:-6], '%Y-%m-%dT%H:%M:%S').strftime('%Y/%m/%d %H:%M')
@@ -217,34 +196,32 @@ def handle_message(event):
 
                 #print(start, g_event['summary'])
                 #print(g_event['start'], g_event['end'], g_event['summary'], g_event['description'])
-                tmp = "*"+ str(start) + "~" + str(end) +" ["+ g_event['summary']+"]"
-                alist.append(tmp)
+                tmp = "・"+ str(start) + "~" + str(end) +" "+ g_event['summary']
+                schedule.append(tmp)
 
-            print("\n".join(alist))
-            tmp = "\n\n".join(alist)
-            reply_txt = tmp
+            print("\n".join(schedule))
+            reply_txt = "\n\n".join(schedule)
+            
 
 
     #予定を挿入する
     # "xxxxyyzz nnnn 予定"
-    if re.fullmatch( r'\d{8} \d{4} [\u0000-\u007F\u3041-\u309F\u30A1-\u30FF\u2E80-\u2FDF\u3005-\u3007\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\U00020000-\U0002EBEF]+', receive_txt):
+    if re.fullmatch( r'(\d{2}|\d{1})/(\d{2}|\d{1}) (\d{2}|\d{1}):\d{2} [\u0000-\u007F\u3041-\u309F\u30A1-\u30FF\u2E80-\u2FDF\u3005-\u3007\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\U00020000-\U0002EBEF]+', receive_txt):
         tmp = receive_txt.split( )
         print(tmp) #tmp[0]: 年 tmp[1]: 時間 tmp[2]: 予定
-        year = tmp[0][:4]
-        month = tmp[0][4:6]
-        day = tmp[0][6:8]
-        hour = tmp[1][:2]
-        minute = tmp[1][2:4]
+        year = 2022
+        monthday = tmp[0].split("/")
+        hourminute = tmp[1].split(":")
         yotei = str(tmp[2])
 
-        time = datetime.datetime(int(year), int(month), int(day), int(hour), int(minute))
+        time = datetime.datetime(int(year), int(monthday[0]), int(monthday[1]), int(hourminute[0]), int(hourminute[1]))
         print(time)
 
         timefrom = time.isoformat()
         timeto = (time + datetime.timedelta(seconds = 3600)).isoformat()
 
         g_event = {
-            'summary': tmp[2],
+            'summary': yotei,
             #'location': 'Shibuya Office',
             #'description': 'サンプルの予定',
             'start': {
@@ -262,7 +239,7 @@ def handle_message(event):
         print (g_event['id'])
 
         
-        reply_txt = year+"/"+month+"/"+day+"の"+hour+":"+minute+"に「"+yotei+"」の予定を追加しました"
+        reply_txt = "予定を追加しました。"
 
     line_bot_api.reply_message(
         event.reply_token,
