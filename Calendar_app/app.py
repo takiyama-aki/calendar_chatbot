@@ -119,8 +119,8 @@ def handle_message(event):
 
     # 明日と言ったら明日の予定を返信する
     if receive_txt == "明日":
-        tmp = datetime.datetime.now().strftime('%Y/%m/%d') # tmp = "年/月/日"
-        ymd = tmp.split("/") # ymd[0]= 年, ymd[1]= 月, ymd[2]= 日 
+        today = datetime.datetime.now().strftime('%Y/%m/%d') # tmp = "年/月/日"
+        ymd = today.split("/") # ymd[0]= 年, ymd[1]= 月, ymd[2]= 日 
 
         tomorrow = datetime.datetime(int(ymd[0]), int(ymd[1]), int(ymd[2]), 15)
         timefrom = tomorrow.isoformat()+'Z'
@@ -205,7 +205,7 @@ def handle_message(event):
 
 
     #予定を挿入する
-    # "xxxxyyzz nnnn 予定"
+    # "xx/yy hh:mm 予定"
     if re.fullmatch( r'(\d{2}|\d{1})/(\d{2}|\d{1}) (\d{2}|\d{1}):\d{2} [\u0000-\u007F\u3041-\u309F\u30A1-\u30FF\u2E80-\u2FDF\u3005-\u3007\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\U00020000-\U0002EBEF]+', receive_txt):
         tmp = receive_txt.split( )
         print(tmp) #tmp[0]: 年 tmp[1]: 時間 tmp[2]: 予定
@@ -214,11 +214,51 @@ def handle_message(event):
         hourminute = tmp[1].split(":")
         yotei = str(tmp[2])
 
-        time = datetime.datetime(int(year), int(monthday[0]), int(monthday[1]), int(hourminute[0]), int(hourminute[1]))
-        print(time)
+        eventday = datetime.datetime(int(year), int(monthday[0]), int(monthday[1]), int(hourminute[0]), int(hourminute[1]))
+        print(eventday)
 
-        timefrom = time.isoformat()
-        timeto = (time + datetime.timedelta(seconds = 3600)).isoformat()
+        timefrom = eventday.isoformat()
+        timeto = (eventday + datetime.timedelta(seconds = 3600)).isoformat()
+
+        g_event = {
+            'summary': yotei,
+            #'location': 'Shibuya Office',
+            #'description': 'サンプルの予定',
+            'start': {
+                'dateTime': timefrom,
+                'timeZone': 'Japan',
+            },
+            'end': {
+                'dateTime': timeto,
+                'timeZone': 'Japan',
+            },
+        }
+
+        g_event = service.events().insert(calendarId='csak19061@g.nihon-u.ac.jp',
+                                        body=g_event).execute()
+        print (g_event['id'])
+
+        
+        reply_txt = "予定を追加しました。"
+    
+    # "○曜日 予定"
+    if re.fullmatch( r'(月|火|水|木|金|土|日)曜日 [\u0000-\u007F\u3041-\u309F\u30A1-\u30FF\u2E80-\u2FDF\u3005-\u3007\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\U00020000-\U0002EBEF]+', receive_txt):
+        tmp = receive_txt.split()
+        youbi = tmp[0][0]
+        yotei = tmp[1]
+        print(youbi)
+        youbitoday = datetime.date.today().weekday()
+        
+        weekday = 0 if youbi == "月" else 1 if youbi == "火" else 2 if youbi == "水" else 3 if youbi =="木" else 4 if youbi =="金" else 5 if youbi =="土" else 6 if youbi =="日" else None
+            
+        diff_youbi = weekday - youbitoday
+
+        today = datetime.datetime.now().strftime('%Y/%m/%d')
+        ymd = today.split("/") # ymd[0]= 年, ymd[1]= 月, ymd[2]= 日 
+
+        eventday = datetime.datetime(int(ymd[0]), int(ymd[1]), int(ymd[2])+diff_youbi)
+        timefrom = eventday.isoformat()+'Z'
+        timeto = (eventday + datetime.timedelta(seconds= 3600)).isoformat()+'Z'
 
         g_event = {
             'summary': yotei,
@@ -241,6 +281,47 @@ def handle_message(event):
         
         reply_txt = "予定を追加しました。"
 
+    # "来週 ○曜日 予定"
+    if re.fullmatch( r'来週 (月|火|水|木|金|土|日)曜日 [\u0000-\u007F\u3041-\u309F\u30A1-\u30FF\u2E80-\u2FDF\u3005-\u3007\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\U00020000-\U0002EBEF]+', receive_txt):
+        tmp = receive_txt.split()
+        youbi = tmp[1][0]
+        yotei = tmp[2]
+        print(youbi)
+        youbitoday = datetime.date.today().weekday()
+        
+        weekday = 0 if youbi == "月" else 1 if youbi == "火" else 2 if youbi == "水" else 3 if youbi =="木" else 4 if youbi =="金" else 5 if youbi =="土" else 6 if youbi =="日" else None
+
+        diff_youbi = weekday - youbitoday
+
+        today = datetime.datetime.now().strftime('%Y/%m/%d')
+        ymd = today.split("/") # ymd[0]= 年, ymd[1]= 月, ymd[2]= 日 
+
+        eventday = datetime.datetime(int(ymd[0]), int(ymd[1]), int(ymd[2])+diff_youbi+7)
+        timefrom = eventday.isoformat()+'Z'
+        timeto = (eventday + datetime.timedelta(seconds= 3600)).isoformat()+'Z'
+
+        g_event = {
+            'summary': yotei,
+            #'location': 'Shibuya Office',
+            #'description': 'サンプルの予定',
+            'start': {
+                'dateTime': timefrom,
+                'timeZone': 'Japan',
+            },
+            'end': {
+                'dateTime': timeto,
+                'timeZone': 'Japan',
+            },
+        }
+
+        g_event = service.events().insert(calendarId='csak19061@g.nihon-u.ac.jp',
+                                        body=g_event).execute()
+        print (g_event['id'])
+
+        
+        reply_txt = "予定を追加しました。"
+
+    # 返信する
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=reply_txt)) #event.message.text がユーザーが送ってきたテキスト
