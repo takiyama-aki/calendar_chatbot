@@ -19,6 +19,9 @@ line_bot_api = LineBotApi('lhqD0fJxzv4nMgoIOdqLeMrTdNTFFaEhI8vX/PBYSDMndxQNRhIVJ
 handler = WebhookHandler('03fb497fc092b55b7ce856b2d9b795bd') 
 #YOUR_CHANNEL_SECRET
 
+@app.route("/")
+def hoge():
+    return "OK"
     
 @app.route("/callback", methods=['POST'])
 def callback():
